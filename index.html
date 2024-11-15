@@ -115,14 +115,35 @@
             .switch-label {
                 margin-right: 10px;
             }
+            .clear-button {
+                background-color: #2d86ff;
+                color: white;
+                border: none;
+                border-radius: 34px;
+                padding: 10px 20px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s;
+                margin-left: 10px;
+                font-family: inherit; /* This will make it inherit from the body */
+            }
+            .clear-button:hover {
+                background-color: #1a5bb8;
+            }
     </style>
+    <script>
+            function clearSearchInput() {
+                document.getElementById('searchInput').value = '';
+                filterTable(); // Call this to refresh the table if needed
+            }
+    </script>
 </head>
 <body>
     <h1>mlmongo.py output</h1>
     <h2 align=center>update -g</h2>
-    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="filter [ESC to clear]" onkeydown="handleKeyDown(event)">
-    <div id="rowCount"></div>
-    <!-- New div for row count -->
+    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="filter [ESC to clear]" onkeydown="handleKeyDown(event)">    
+    <!-- Clear Button -->
+    <button class="clear-button" onclick="clearSearchInput()">Clear</button>
     <div class="switch-container">
         <span class="switch-label">opendyslexic font</span>
         <label class="switch">
@@ -133,10 +154,12 @@
     <div class="switch-container">
         <span class="switch-label">lock headers</span>
         <label class="switch">
-                <input type="checkbox" id="headerLockSwitch" onchange="toggleHeaderLock()">
+                <input type="checkbox" id="headerLockSwitch" onchange="toggleHeaderLock()" checked>
                 <span class="slider"></span>
             </label>
     </div>
+    <!-- New div for row count -->
+    <div id="rowCount"></div>
     <div class="table-container">
         <table id="docTable">
             <thead>
