@@ -127,14 +127,12 @@
                 margin-left: 10px;
                 font-family: inherit; /* This will make it inherit from the body */
             }
-            .clear-button:hover {
-                background-color: #1a5bb8;
-            }
     </style>
     <script>
             function clearSearchInput() {
                 document.getElementById('searchInput').value = '';
                 filterTable(); // Call this to refresh the table if needed
+                document.getElementById("searchInput").focus();
             }
     </script>
 </head>
