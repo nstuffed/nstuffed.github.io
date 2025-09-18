@@ -213,7 +213,7 @@
     // Carica CSV e costruisci la tabella
     Papa.parse("list.csv", {
       download: true,
-      header: true,
+      header: false,
       complete: function(results) {
         const data = results.data;
         const tbody = document.querySelector("#filmTable tbody");
