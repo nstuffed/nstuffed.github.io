@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+	<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>mlmongo.py output</title>
+  <title>Archivio Film</title>
   <!-- jQuery + DataTables + DataTables Responsive + FixedHeader -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -157,22 +157,22 @@
   </style>
 </head>
 <body class="dark"> <!-- dark mode di default -->
-  <h1>📝 mlmongo.py output</h1>
+  <h1>📂 Archivio Film</h1>
 
   <!-- il pulsante di switch rimane disponibile -->
-  <button id="darkToggle" type="button">☀️ disable dark mode</button>
+  <button id="darkToggle" type="button">☀️ Disattiva Dark Mode</button>
 
   <div class="filters">
     <label>
-      path
-      <select id="filterPath"><option value="">(all)</option></select>
+      Path
+      <select id="filterPath"><option value="">(Tutti)</option></select>
     </label>
     <label>
-      year
-      <select id="filterYear"><option value="">(all)</option></select>
+      Anno
+      <select id="filterYear"><option value="">(Tutti)</option></select>
     </label>
     <label>
-      name
+      Nome
       <input type="text" id="filterName" placeholder="find name...">
     </label>
   </div>
@@ -180,17 +180,17 @@
   <table id="filmTable" class="display nowrap" style="width:100%">
     <thead>
       <tr>
-        <th>path</th>
-        <th>name</th>
-        <th>year</th>
-        <th>time</th>
+        <th>Path</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Time</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <!-- Bottone flottante -->
-  <button id="backToTop" type="button">👆</button>
+  <button id="backToTop" type="button">↑</button>
 
   <script>
     let table;
@@ -199,8 +199,8 @@
     const darkToggle = document.getElementById("darkToggle");
     function updateDarkToggleText() {
       darkToggle.textContent = document.body.classList.contains("dark")
-        ? "☀️ disable dark mode"
-        : "🌙 enable dark mode";
+        ? "☀️ Disattiva Dark Mode"
+        : "🌙 Attiva Dark Mode";
     }
     updateDarkToggleText();
 
