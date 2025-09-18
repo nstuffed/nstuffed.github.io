@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Archivio Film</title>
+  <title>mlmongo.py update</title>
   <!-- jQuery + DataTables + DataTables Responsive + FixedHeader -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -157,19 +157,19 @@
   </style>
 </head>
 <body class="dark"> <!-- dark mode di default -->
-  <h1>📂 Archivio Film</h1>
+  <h1>📋 mlmongo.py update</h1>
 
   <!-- il pulsante di switch rimane disponibile -->
-  <button id="darkToggle" type="button">☀️ Disattiva Dark Mode</button>
+  <button id="darkToggle" type="button">☀️ disable dark mode</button>
 
   <div class="filters">
     <label>
       Path
-      <select id="filterPath"><option value="">(Tutti)</option></select>
+      <select id="filterPath"><option value="">(all)</option></select>
     </label>
     <label>
       Anno
-      <select id="filterYear"><option value="">(Tutti)</option></select>
+      <select id="filterYear"><option value="">(all)</option></select>
     </label>
     <label>
       Nome
@@ -180,10 +180,10 @@
   <table id="filmTable" class="display nowrap" style="width:100%">
     <thead>
       <tr>
-        <th>Path</th>
-        <th>Name</th>
-        <th>Year</th>
-        <th>Time</th>
+        <th>path</th>
+        <th>name</th>
+        <th>year</th>
+        <th>time</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -199,8 +199,8 @@
     const darkToggle = document.getElementById("darkToggle");
     function updateDarkToggleText() {
       darkToggle.textContent = document.body.classList.contains("dark")
-        ? "☀️ Disattiva Dark Mode"
-        : "🌙 Attiva Dark Mode";
+        ? "☀️ disable dark mode"
+        : "🌙 enable dark mode";
     }
     updateDarkToggleText();
 
