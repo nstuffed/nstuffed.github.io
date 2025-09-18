@@ -1,4 +1,4 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
@@ -103,8 +103,8 @@
     /* Bottone flottante "torna su" */
     #backToTop {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 80px;
+      right: 60px;
       background: #0078d7;
       color: #fff;
       border: none;
@@ -156,7 +156,7 @@
     /* L'header resta blu anche in dark grazie all'important sopra */
   </style>
 </head>
-<body class="dark"> <!-- dark mode di default -->
+<body class="dark">
   <h1>📋 mlmongo.py update</h1>
 
   <!-- il pulsante di switch rimane disponibile -->
@@ -190,7 +190,7 @@
   </table>
 
   <!-- Bottone flottante -->
-  <button id="backToTop" type="button">↑</button>
+  <button id="backToTop" type="button">☝️</button>
 
   <script>
     let table;
@@ -231,17 +231,38 @@
           }
         });
 
-        // DataTables con ricerca attiva (ma box nascosto via CSS)
-        table = new DataTable("#filmTable", {
-          paging: false,
-          lengthChange: false,
-          info: false,
-          searching: true,  // ricerca attiva per far funzionare il filtro "Nome"
-          ordering: true,
-          responsive: true,
-          fixedHeader: true
-        });
-
+		// Modifica questa sezione del tuo script
+		table = new DataTable("#filmTable", {
+		  paging: true,
+		  pageLength: 500,
+		  lengthMenu: [500],
+		  lengthChange: false,
+		  info: true,
+		  searching: true,
+		  ordering: true,
+		  responsive: true,
+		  fixedHeader: true,
+		  language: {
+			// Testo principale di informazione
+			info: "shown _START_ to _END_ of _TOTAL_ rows",
+			infoEmpty: "no rows",
+			infoFiltered: "(filtered from _MAX_)",
+			
+			// Testo dei pulsanti di navigazione
+			paginate: {
+			  first: "first",
+			  previous: "previous",
+			  next: "next",
+			  last: "last"
+			},
+			
+			// Altre opzioni utili
+			search: "Filter:",
+			zeroRecords: "no rows",
+			processing: "loading...",
+			loadingRecords: "loading..."
+		  }
+		});
         const paths = [...new Set(data.map(r => r.path).filter(Boolean))].sort();
         const years = [...new Set(data.map(r => r.year).filter(Boolean))].sort();
 
