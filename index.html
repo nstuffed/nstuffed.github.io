@@ -193,150 +193,123 @@
   <!-- Bottone flottante -->
   <button id="backToTop" type="button">☝️</button>
 
-<script>
-  let table;
+  <script>
+    let table;
 
-  // Inizializza il testo del pulsante in base allo stato corrente
-  const darkToggle = document.getElementById("darkToggle");
-  function updateDarkToggleText() {
-    darkToggle.textContent = document.body.classList.contains("dark")
-      ? "☀️ disable dark mode"
-      : "🌙 enable dark mode";
-  }
-  updateDarkToggleText();
-
-  // Toggle dark mode
-  darkToggle.addEventListener("click", function() {
-    document.body.classList.toggle("dark");
-    updateDarkToggleText();
-  });
-
-  // Carica CSV e costruisci la tabella
-  Papa.parse("list.csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      const tbody = document.querySelector("#filmTable tbody");
-
-      data.forEach(row => {
-        if (row.path) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.path}</td>
-            <td>${row.name}</td>
-            <td>${row.year}</td>
-            <td>${row.time}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-      });
-
-      // Modifica questa sezione del tuo script
-      table = new DataTable("#filmTable", {
-        paging: true,
-        pageLength: 300,
-        lengthMenu: [300],
-        lengthChange: false,
-        info: true,
-        searching: true,
-        ordering: true,
-        responsive: true,
-        fixedHeader: true,
-        language: {
-          // Testo principale di informazione
-          info: "shown _START_ to _END_ of _TOTAL_ rows",
-          infoEmpty: "no rows",
-          infoFiltered: "(filtered from _MAX_)",
-          
-          // Testo dei pulsanti di navigazione
-          paginate: {
-            first: "first",
-            previous: "previous",
-            next: "next",
-            last: "last"
-          },
-          
-          // Altre opzioni utili
-          search: "Filter:",
-          zeroRecords: "no rows",
-          processing: "loading...",
-          loadingRecords: "loading..."
-        }
-      });
-
-      // Function to handle responsive row expansion
-      function handleResponsiveExpansion() {
-        if (window.innerWidth <= 600) {
-          table.rows().every(function() {
-            if (!this.child.isShown()) {
-              this.child.show();
-            }
-          });
-        }
-      }
-
-      // After table initialization
-      table.on('responsive-display', function(e, datatable, row, showHide, update) {
-        if (window.innerWidth <= 600) {
-          setTimeout(handleResponsiveExpansion, 50);
-        }
-      });
-
-      // Handle window resize
-      let resizeTimer;
-      window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(handleResponsiveExpansion, 250);
-      });
-
-      // Initial expansion
-      setTimeout(handleResponsiveExpansion, 100);
-
-      const paths = [...new Set(data.map(r => r.path).filter(Boolean))].sort();
-      const years = [...new Set(data.map(r => r.year).filter(Boolean))].sort();
-
-      const filterPath = document.getElementById("filterPath");
-      paths.forEach(p => filterPath.appendChild(new Option(p, p)));
-
-      const filterYear = document.getElementById("filterYear");
-      years.forEach(y => filterYear.appendChild(new Option(y, y)));
-
-      document.getElementById("filterPath").addEventListener("change", function() {
-        table.column(0).search(this.value).draw();
-      });
-      document.getElementById("filterYear").addEventListener("change", function() {
-        table.column(2).search(this.value).draw();
-      });
-
-      const filterName = document.getElementById("filterName");
-
-      // Focus di default sul campo name
-      filterName.focus();
-
-      // Gestione eventi per il campo name
-      filterName.addEventListener("keyup", function(e) {
-        // Se premi ESC, resetta il campo
-        if (e.key === "Escape") {
-          this.value = "";
-          table.column(1).search("").draw();
-        } else {
-          // Altrimenti filtra normalmente
-          table.column(1).search(this.value).draw();
-        }
-      });
+    // Inizializza il testo del pulsante in base allo stato corrente
+    const darkToggle = document.getElementById("darkToggle");
+    function updateDarkToggleText() {
+      darkToggle.textContent = document.body.classList.contains("dark")
+        ? "☀️ disable dark mode"
+        : "🌙 enable dark mode";
     }
-  });
+    updateDarkToggleText();
 
-  // Bottone "torna su"
-  const backToTop = document.getElementById("backToTop");
-  window.addEventListener("scroll", () => {
-    backToTop.style.display = window.scrollY > 300 ? "block" : "none";
-  });
-  backToTop.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-</script>
+    // Toggle dark mode
+    darkToggle.addEventListener("click", function() {
+      document.body.classList.toggle("dark");
+      updateDarkToggleText();
+    });
 
+    // Carica CSV e costruisci la tabella
+    Papa.parse("list.csv", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        const data = results.data;
+        const tbody = document.querySelector("#filmTable tbody");
+
+        data.forEach(row => {
+          if (row.path) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.path}</td>
+              <td>${row.name}</td>
+              <td>${row.year}</td>
+              <td>${row.time}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+
+		// Modifica questa sezione del tuo script
+		table = new DataTable("#filmTable", {
+		  paging: true,
+		  pageLength: 300,
+		  lengthMenu: [300],
+		  lengthChange: false,
+		  info: true,
+		  searching: true,
+		  ordering: true,
+		  responsive: false,
+                  scrollX: true,
+		  fixedHeader: true,
+		  language: {
+			// Testo principale di informazione
+			info: "shown _START_ to _END_ of _TOTAL_ rows",
+			infoEmpty: "no rows",
+			infoFiltered: "(filtered from _MAX_)",
+			
+			// Testo dei pulsanti di navigazione
+			paginate: {
+			  first: "first",
+			  previous: "previous",
+			  next: "next",
+			  last: "last"
+			},
+			
+			// Altre opzioni utili
+			search: "Filter:",
+			zeroRecords: "no rows",
+			processing: "loading...",
+			loadingRecords: "loading..."
+		  }
+		});
+        const paths = [...new Set(data.map(r => r.path).filter(Boolean))].sort();
+        const years = [...new Set(data.map(r => r.year).filter(Boolean))].sort();
+
+        const filterPath = document.getElementById("filterPath");
+        paths.forEach(p => filterPath.appendChild(new Option(p, p)));
+
+        const filterYear = document.getElementById("filterYear");
+        years.forEach(y => filterYear.appendChild(new Option(y, y)));
+
+        document.getElementById("filterPath").addEventListener("change", function() {
+          table.column(0).search(this.value).draw();
+        });
+        document.getElementById("filterYear").addEventListener("change", function() {
+          table.column(2).search(this.value).draw();
+        });
+//      document.getElementById("filterName").addEventListener("keyup", function() {
+//        table.column(1).search(this.value).draw();
+//      });
+		const filterName = document.getElementById("filterName");
+
+		// Focus di default sul campo name
+		filterName.focus();
+
+		// Gestione eventi per il campo name
+		filterName.addEventListener("keyup", function(e) {
+		  // Se premi ESC, resetta il campo
+		  if (e.key === "Escape") {
+			this.value = "";
+			table.column(1).search("").draw();
+		  } else {
+			// Altrimenti filtra normalmente
+			table.column(1).search(this.value).draw();
+		  }
+		});
+      }
+    });
+
+    // Bottone "torna su"
+    const backToTop = document.getElementById("backToTop");
+    window.addEventListener("scroll", () => {
+      backToTop.style.display = window.scrollY > 300 ? "block" : "none";
+    });
+    backToTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  </script>
 </body>
 </html>
