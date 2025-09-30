@@ -2,7 +2,6 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>mlmongo.py update</title>
   <!-- jQuery + DataTables + DataTables Responsive + FixedHeader -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -241,10 +240,8 @@
 		  info: true,
 		  searching: true,
 		  ordering: true,
-		  responsive: false,
-                  scrollX: true,
+		  responsive: true,
 		  fixedHeader: true,
-		  order: [[3, 'desc']],
 		  language: {
 			// Testo principale di informazione
 			info: "shown _START_ to _END_ of _TOTAL_ rows",
@@ -276,14 +273,15 @@
         years.forEach(y => filterYear.appendChild(new Option(y, y)));
 
         document.getElementById("filterPath").addEventListener("change", function() {
-          table.column(0).search(this.value).draw();
+          if (this.value) {
+            table.column(0).search("^" + this.value + "$", true, false).draw();
+          } else {
+            table.column(0).search("").draw();
+          }
         });
         document.getElementById("filterYear").addEventListener("change", function() {
           table.column(2).search(this.value).draw();
         });
-//      document.getElementById("filterName").addEventListener("keyup", function() {
-//        table.column(1).search(this.value).draw();
-//      });
 		const filterName = document.getElementById("filterName");
 
 		// Focus di default sul campo name
