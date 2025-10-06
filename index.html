@@ -61,15 +61,6 @@
       transition: all 0.25s ease;
     }
 
-    /* Focus sui campi: nessun bordo, sfondo chiaro e testo scuro */
-    .filters input:focus,
-    .filters select:focus {
-       outline: none;             /* rimuove il bordo predefinito */
-       box-shadow: none;          /* rimuove eventuali ombre */
-       background-color: #f0f0f0; /* sfondo chiaro */
-       color: #000;               /* testo scuro */
-    }
-
     #darkToggle {
       display: block;
       margin: 0 auto 15px auto;
@@ -149,12 +140,6 @@
       background: #1e1e1e;
       color: #eee;
       border: 1px solid #555;
-    }
-
-    body.dark .filters input:focus,
-    body.dark .filters select:focus {
-      background-color: #444; /* leggermente più chiaro del background dark */
-      color: #fff;            /* testo chiaro */
     }
 
     body.dark table.dataTable {
