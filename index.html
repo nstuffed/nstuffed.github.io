@@ -90,7 +90,7 @@ function parseCSV(text) {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    const cols = line.split(',');
+    const cols = line.split(';');
     if (cols.length < 4) continue;
     rows.push({ p: cols[0], n: cols[1], y: cols[2], t: cols[3] });
   }
