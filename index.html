@@ -24,9 +24,13 @@
   #search::placeholder { color: var(--text-muted); }
   #search:focus { border-color: var(--accent); }
   #search:disabled { opacity: 0.4; cursor: not-allowed; }
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-  th { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 1.2rem; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; height: calc(100vh - var(--header-h, 120px)); overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
+  th { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 1.2rem; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+  .col-date { width: 7rem; }
+  .col-year { width: 4.5rem; }
+  .col-path { width: 8rem; }
+  .col-name { width: auto; }
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
   tbody tr:hover { background: rgba(200,240,62,0.04); }
   td { padding: 0.6rem 1.2rem; vertical-align: middle; line-height: 1.4; }
@@ -43,10 +47,9 @@
   @media (max-width: 600px) {
     header { padding: 1.2rem 1rem 1rem; }
     th, td { padding: 0.5rem 0.75rem; }
-    .col-path, .col-year { display: none; }
-    .td-name { max-width: 60vw; font-size: 0.75rem; }
+    .td-name { font-size: 0.75rem; }
     .td-date { font-size: 0.68rem; }
-    table { font-size: 0.75rem; }
+    table { font-size: 0.75rem; min-width: 36rem; }
   }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -152,7 +155,15 @@ async function init() {
   }
 }
 
-init();
+function updateHeaderHeight() {
+  const h = document.querySelector('header').offsetHeight;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+window.addEventListener('resize', updateHeaderHeight);
+
+init().then(() => updateHeaderHeight());
+// fallback immediate call
+updateHeaderHeight();
 </script>
 </body>
 </html>
