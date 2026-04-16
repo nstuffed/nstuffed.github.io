@@ -1,215 +1,445 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mlmongo.py output</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d0d0f; --surface: #131316; --border: #222228; --border-hover: #3a3a45;
-    --accent: #c8f03e; --accent-dim: rgba(200,240,62,0.12);
-    --text: #e8e8ec; --text-muted: #5a5a68; --text-mid: #9898aa; --tag-bg: #1a1a20;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
-  header { padding: 2.5rem 1.5rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(13,13,15,0.92); backdrop-filter: blur(12px); z-index: 100; }
-  .header-top { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
-  h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.4rem); letter-spacing: -0.03em; color: var(--text); line-height: 1; }
-  .count-badge { font-size: 0.7rem; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(200,240,62,0.25); padding: 0.2em 0.6em; border-radius: 2px; letter-spacing: 0.08em; }
-  .filters-row { display: flex; gap: 0.75rem; align-items: stretch; }
-  .search-wrap { position: relative; flex: 1 1 0; min-width: 0; }
-  .search-wrap svg { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; width: 15px; height: 15px; }
-  #search { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.85rem; padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 4px; outline: none; transition: border-color 0.2s; letter-spacing: 0.02em; }
-  #search::placeholder { color: var(--text-muted); }
-  #search:focus { border-color: var(--accent); }
-  #search:disabled { opacity: 0.4; cursor: not-allowed; }
-  .path-filter-wrap { position: relative; flex: 0 0 auto; }
-  .path-filter-wrap svg { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; width: 14px; height: 14px; }
-  #path-filter { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 0.8rem; padding: 0.7rem 2rem 0.7rem 2.4rem; border-radius: 4px; outline: none; transition: border-color 0.2s; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; appearance: none; -webkit-appearance: none; min-width: 9rem; }
-  #path-filter:focus { border-color: var(--accent); }
-  #path-filter:disabled { opacity: 0.4; cursor: not-allowed; }
-  #path-filter option { text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface); color: var(--text); }
-  /* custom chevron */
-  .path-filter-wrap::after { content: ''; position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--text-muted); pointer-events: none; }
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; height: calc(100vh - var(--header-h, 120px)); overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
-  th { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 1.2rem; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap; position: sticky; top: 0; z-index: 10; }
-  .col-date { width: 7rem; }
-  .col-year { width: 4.5rem; }
-  .col-path { width: 8rem; }
-  .col-name { width: auto; }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
-  tbody tr:hover { background: rgba(200,240,62,0.04); }
-  td { padding: 0.6rem 1.2rem; vertical-align: middle; line-height: 1.4; }
-  .td-date { color: var(--text-muted); white-space: nowrap; font-size: 0.72rem; letter-spacing: 0.04em; }
-  .td-year { color: var(--text-mid); white-space: nowrap; }
-  .td-path { white-space: nowrap; }
-  .path-tag { display: inline-block; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.18em 0.5em; border-radius: 2px; border: 1px solid var(--border); background: var(--tag-bg); color: var(--text-mid); }
-  .td-name { color: var(--text); max-width: 55vw; word-break: break-word; }
-  mark { background: var(--accent-dim); color: var(--accent); border-radius: 1px; padding: 0 1px; }
-  .status { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 0.06em; }
-  .status .icon { display: block; font-size: 2rem; margin-bottom: 1rem; opacity: 0.3; }
-  @keyframes blink { 50% { opacity: 0; } }
-  .blink { animation: blink 1s step-start infinite; }
-  @media (max-width: 600px) {
-    header { padding: 1.2rem 1rem 1rem; }
-    th, td { padding: 0.5rem 0.75rem; }
-    .td-name { font-size: 0.75rem; }
-    .td-date { font-size: 0.68rem; }
-    table { font-size: 0.75rem; min-width: 36rem; }
-    .filters-row { flex-direction: column; }
-    #path-filter { min-width: 0; width: 100%; }
-  }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Index - list.csv</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #0f1620;
+      --border: #233246;
+      --text: #e6edf3;
+      --muted: #8aa0b6;
+      --accent: #7cfc00;
+      --accent2: #4ad6ff;
+      --tag-bg: rgba(124, 252, 0, 0.08);
+      --tag-border: rgba(124, 252, 0, 0.22);
+      --shadow: rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(74,214,255,0.12), transparent 60%),
+                  radial-gradient(900px 500px at 85% 0%, rgba(124,252,0,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: rgba(11, 15, 20, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .counter {
+      color: var(--accent2);
+      border: 1px solid rgba(74,214,255,0.25);
+      background: rgba(74,214,255,0.08);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 220px;
+      flex: 1 1 auto;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    input[type="search"], select {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    input[type="search"]::placeholder { color: rgba(138,160,182,0.7); }
+    input[type="search"]:focus, select:focus { border-color: rgba(124,252,0,0.55); box-shadow: 0 0 0 3px rgba(124,252,0,0.10); }
+
+    .wrap {
+      height: calc(100vh - 98px);
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 900px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 22, 32, 0.95);
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 7px 9px;
+      text-align: left;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    tbody td {
+      padding: 6px 9px;
+      border-bottom: 1px solid rgba(35, 50, 70, 0.7);
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    tbody tr:hover { background: rgba(124,252,0,0.04); }
+
+    .col-date { width: 105px; }
+    .col-year { width: 70px; }
+    .col-path { width: 220px; }
+    .col-tags { width: 240px; }
+    .col-name { width: auto; }
+
+    /* Prevent long titles from visually overflowing on small screens. */
+    td.col-name, th.col-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0; /* required for ellipsis in some browsers */
+    }
+
+    .mono-dim { color: var(--muted); }
+
+    .pill {
+      display: inline-block;
+      padding: 2.5px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--tag-border);
+      background: var(--tag-bg);
+      color: rgba(230, 237, 243, 0.95);
+      font-size: 13px;
+      margin: 2px 6px 2px 0;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    mark {
+      background: rgba(124,252,0,0.16);
+      color: var(--accent);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .status {
+      padding: 44px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .status .icon {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 10px;
+      opacity: 0.6;
+    }
+
+    .mono-err { color: #ff8a7a; }
+
+    @media (max-width: 700px) {
+      /* Keep a wide table so horizontal scroll stays available
+         instead of squeezing the title column to ~0 width. */
+      table { min-width: 900px; table-layout: fixed; }
+      .col-date { width: 85px; }
+      .col-year { width: 60px; }
+      .col-path { width: 130px; }
+      .col-tags { width: 130px; }
+      .pill { font-size: 12px; margin: 2px 5px 2px 0; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div class="header-top">
-    <h1>mlmongo.py output</h1>
-    <span class="count-badge" id="counter">—</span>
-  </div>
-  <div class="filters-row">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="search" id="search" placeholder="cerca per titolo..." autocomplete="off" spellcheck="false" disabled>
+  <header>
+    <div class="topline">
+      <div class="title">mlmongo.py index</div>
+      <div class="counter" id="counter">—</div>
     </div>
-    <div class="path-filter-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-      <select id="path-filter" disabled>
-        <option value="">tutti i percorsi</option>
-      </select>
+    <div class="controls">
+      <div class="control">
+        <label for="search">search</label>
+        <input type="search" id="search" placeholder="cerca per titolo..." autocomplete="off" spellcheck="false" disabled>
+      </div>
+        <div class="control" style="min-width: 230px; flex: 0 0 auto;">
+          <label for="tag-filter">tag</label>
+          <select id="tag-filter" disabled>
+            <option value="">tutti i tag</option>
+          </select>
+        </div>
+        <div class="control" style="min-width: 230px; flex: 0 0 auto;">
+          <label for="path-filter">path</label>
+          <select id="path-filter" disabled>
+            <option value="">tutti i percorsi</option>
+          </select>
+        </div>
     </div>
+  </header>
+
+  <div class="wrap">
+    <div class="status" id="status">
+      <span class="icon">◌</span>caricamento...
+    </div>
+
+    <table id="table" style="display:none">
+      <thead>
+        <tr>
+          <th class="col-date">Data</th>
+          <th class="col-name">Titolo</th>
+          <th class="col-year">Anno</th>
+          <th class="col-tags">Tag</th>
+          <th class="col-path">Percorso</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
-</header>
-<div class="table-wrap">
-  <table id="table" style="display:none">
-    <thead><tr>
-      <th class="col-date">Data</th>
-      <th class="col-name">Titolo</th>
-      <th class="col-year">Anno</th>
-      <th class="col-path">Percorso</th>
-    </tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
-  <div class="status" id="status">
-    <span class="icon">◌</span>caricamento<span class="blink">_</span>
-  </div>
-</div>
-<script>
-let DATA = [];
 
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/);
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const cols = line.split(';');
-    if (cols.length < 4) continue;
-    rows.push({ p: cols[0], n: cols[1], y: cols[2], t: cols[3] });
-  }
-  return rows;
-}
+  <script>
+    let DATA = [];
 
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
 
-function highlight(text, query) {
-  if (!query) return esc(text);
-  const safe = esc(text);
-  const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
-}
+    function highlight(text, query) {
+      const q = (query || "").trim();
+      if (!q) return esc(text);
+      const safe = esc(text);
+      const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
+      return safe.replace(new RegExp('(' + safeQ + ')', 'gi'), '<mark>$1</mark>');
+    }
 
-function render(query, pathFilter) {
-  const q = query.trim().toLowerCase();
-  const pf = pathFilter || '';
-  let filtered = DATA;
-  if (q) filtered = filtered.filter(r => r.n.toLowerCase().includes(q));
-  if (pf) filtered = filtered.filter(r => r.p === pf);
+    // Minimal CSV parser (handles quotes) + delimiter detection.
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return [];
 
-  const counter = document.getElementById('counter');
-  const tbody = document.getElementById('tbody');
-  const status = document.getElementById('status');
-  const table = document.getElementById('table');
+      const tryDelims = [';', ',', '\t'];
+      const parseWithDelim = (linesToParse, delim) => {
+        const sep = delim;
+        const rows = [];
+        for (const line of linesToParse) {
+          const out = [];
+          let cur = '';
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') {
+              // Double quote escape: ""
+              if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+              else { inQuotes = !inQuotes; }
+              continue;
+            }
+            if (!inQuotes && ch === sep) { out.push(cur); cur = ''; continue; }
+            cur += ch;
+          }
+          out.push(cur);
+          rows.push(out);
+        }
+        return rows;
+      };
 
-  counter.textContent = filtered.length.toLocaleString('it-IT') + ' titoli';
+      // Detect delimiter by maximizing number of columns in header.
+      let best = null;
+      for (const d of tryDelims) {
+        const headerRows = parseWithDelim([lines[0]], d);
+        const cols = (headerRows[0] && headerRows[0].length) ? headerRows[0].length : 0;
+        // Prefer the one that yields 5 columns (path,name,tag,year,time) but fall back gracefully.
+        if (!best || Math.abs(cols - 5) < Math.abs(best.cols - 5)) best = { d, cols };
+      }
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '';
-    table.style.display = 'none';
-    status.innerHTML = '<span class="icon">◌</span>nessun risultato';
-    status.style.display = '';
-    return;
-  }
+      const rows = best ? parseWithDelim(lines, best.d) : parseWithDelim(lines, ';');
+      const header = rows[0].map(x => String(x).trim());
+      const idx = {};
+      header.forEach((h, i) => { idx[h] = i; });
 
-  status.style.display = 'none';
-  table.style.display = '';
-  tbody.innerHTML = filtered.map(r =>
-    `<tr>
-      <td class="td-date col-date">${esc(r.t)}</td>
-      <td class="td-name col-name">${highlight(r.n, query.trim())}</td>
-      <td class="td-year col-year">${esc(r.y)}</td>
-      <td class="td-path col-path"><span class="path-tag">${esc(r.p)}</span></td>
-    </tr>`
-  ).join('');
-}
+      // Expected headers from mlmongo.py
+      const get = (r, key) => r[idx[key]] ?? '';
 
-function populatePathFilter(data) {
-  const paths = [...new Set(data.map(r => r.p))].sort();
-  const sel = document.getElementById('path-filter');
-  paths.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = p;
-    sel.appendChild(opt);
-  });
-}
+      // Skip header row.
+      const data = [];
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || r.length === 0) continue;
 
-async function init() {
-  const status = document.getElementById('status');
-  try {
-    const res = await fetch('list.csv');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    DATA = parseCSV(text);
-    DATA.sort((a, b) => b.t.localeCompare(a.t));
+        // If the file doesn't match expected columns, ignore the row.
+        const p = get(r, 'path');
+        const n = get(r, 'name');
+        const t = get(r, 'tag');
+        const y = get(r, 'year');
+        const d = get(r, 'time');
+        if (p === '' && n === '') continue;
 
-    const search = document.getElementById('search');
-    const pathFilter = document.getElementById('path-filter');
+        data.push({
+          p: p,
+          n: n,
+          tag: t,
+          y: y,
+          t: d
+        });
+      }
 
-    populatePathFilter(DATA);
+      return data;
+    }
 
-    search.disabled = false;
-    pathFilter.disabled = false;
+    function render(query, pathFilter, tagFilter) {
+      const q = (query || '').trim().toLowerCase();
+      const pf = pathFilter || '';
+      const tf = tagFilter || '';
 
-    const getValues = () => ({ q: search.value, p: pathFilter.value });
-    search.addEventListener('input', () => { const v = getValues(); render(v.q, v.p); });
-    pathFilter.addEventListener('change', () => { const v = getValues(); render(v.q, v.p); });
+      let filtered = DATA;
+      if (q) filtered = filtered.filter(r => (r.n || '').toLowerCase().includes(q));
+      if (pf) filtered = filtered.filter(r => r.p === pf);
+      if (tf) {
+        filtered = filtered.filter(r => {
+          const parts = String(r.tag || '').split(',').map(s => s.trim()).filter(Boolean);
+          return parts.includes(tf);
+        });
+      }
 
-    render('', '');
+      const counter = document.getElementById('counter');
+      const tbody = document.getElementById('tbody');
+      const status = document.getElementById('status');
+      const table = document.getElementById('table');
 
-    // autofocus dopo il caricamento
-    search.focus();
-  } catch (err) {
-    status.innerHTML = `<span class="icon">✕</span>impossibile caricare list.csv<br><small style="opacity:.5;display:block;margin-top:.5rem">${esc(err.message)}</small>`;
-  }
-}
+      counter.textContent = filtered.length.toLocaleString('it-IT') + ' risultati';
 
-function updateHeaderHeight() {
-  const h = document.querySelector('header').offsetHeight;
-  document.documentElement.style.setProperty('--header-h', h + 'px');
-}
-window.addEventListener('resize', updateHeaderHeight);
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        table.style.display = 'none';
+        status.innerHTML = '<span class="icon">◌</span>nessun risultato';
+        status.style.display = '';
+        return;
+      }
 
-init().then(() => updateHeaderHeight());
-updateHeaderHeight();
-</script>
+      status.style.display = 'none';
+      table.style.display = '';
+      tbody.innerHTML = filtered.map(r => {
+        const tags = String(r.tag || '').split(',').map(s => s.trim()).filter(Boolean);
+        const tagsHtml = tags.length
+          ? tags.map(tag => '<span class="pill">' + esc(tag) + '</span>').join('')
+          : '<span class="mono-dim">—</span>';
+        return `
+          <tr>
+            <td class="col-date">${esc(r.t)}</td>
+            <td class="col-name">${highlight(r.n, query)}</td>
+            <td class="col-year mono-dim">${esc(r.y)}</td>
+            <td class="col-tags">${tagsHtml}</td>
+            <td class="col-path">${esc(r.p)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function populateSelect(id, values) {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = id === 'path-filter' ? 'tutti i percorsi' : 'tutti i tag';
+      sel.appendChild(defaultOpt);
+      values.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function init() {
+      const status = document.getElementById('status');
+      try {
+        const res = await fetch('list.csv');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+
+        DATA = parseCSV(text);
+        DATA.sort((a, b) => String(b.t).localeCompare(String(a.t)));
+
+        const search = document.getElementById('search');
+        const pathFilter = document.getElementById('path-filter');
+        const tagFilter = document.getElementById('tag-filter');
+
+        const paths = [...new Set(DATA.map(r => r.p).filter(Boolean))].sort();
+        const tags = [...new Set(DATA.flatMap(r => String(r.tag || '').split(',').map(s => s.trim()).filter(Boolean)))].sort();
+
+        populateSelect('path-filter', paths);
+        populateSelect('tag-filter', tags);
+
+        search.disabled = false;
+        pathFilter.disabled = false;
+        tagFilter.disabled = false;
+
+        const get = () => ({ q: search.value, p: pathFilter.value, tg: tagFilter.value });
+        search.addEventListener('input', () => { const v = get(); render(v.q, v.p, v.tg); });
+        pathFilter.addEventListener('change', () => { const v = get(); render(v.q, v.p, v.tg); });
+        tagFilter.addEventListener('change', () => { const v = get(); render(v.q, v.p, v.tg); });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape') return;
+          search.value = '';
+          pathFilter.value = '';
+          tagFilter.value = '';
+          render('', '', '');
+          search.focus();
+        });
+
+        render('', '', '');
+        search.focus();
+      } catch (err) {
+        status.innerHTML = '<span class="icon mono-err">✕</span>impossibile caricare list.csv<br><small class="mono-err" style="display:block;opacity:.9;margin-top:6px;">' + esc(err.message || String(err)) + '</small>';
+      }
+    }
+
+    init();
+  </script>
 </body>
 </html>
