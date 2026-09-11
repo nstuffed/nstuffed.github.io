@@ -249,12 +249,34 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    // Search words independently, treating punctuation/separators as spaces.
+    function normalizeSearchText(value) {
+      return String(value || '')
+        .toLocaleLowerCase('it-IT')
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim();
+    }
+
+    function searchTerms(query) {
+      return normalizeSearchText(query).split(/\s+/).filter(Boolean);
+    }
+
     function highlight(text, query) {
-      const q = (query || "").trim();
-      if (!q) return esc(text);
-      const safe = esc(text);
-      const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
-      return safe.replace(new RegExp('(' + safeQ + ')', 'gi'), '<mark>$1</mark>');
+      const source = String(text || '');
+      const terms = searchTerms(query).sort((a, b) => b.length - a.length);
+      if (!terms.length) return esc(source);
+
+      const safeTerms = terms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const matches = new RegExp('(' + safeTerms.join('|') + ')', 'giu');
+      let html = '';
+      let lastIndex = 0;
+      let match;
+      while ((match = matches.exec(source)) !== null) {
+        html += esc(source.slice(lastIndex, match.index));
+        html += '<mark>' + esc(match[0]) + '</mark>';
+        lastIndex = matches.lastIndex;
+      }
+      return html + esc(source.slice(lastIndex));
     }
 
     // Minimal CSV parser (handles quotes) + delimiter detection.
@@ -331,12 +353,17 @@
     }
 
     function render(query, pathFilter, tagFilter) {
-      const q = (query || '').trim().toLowerCase();
+      const terms = searchTerms(query);
       const pf = pathFilter || '';
       const tf = tagFilter || '';
 
       let filtered = DATA;
-      if (q) filtered = filtered.filter(r => (r.n || '').toLowerCase().includes(q));
+      if (terms.length) {
+        filtered = filtered.filter(r => {
+          const name = normalizeSearchText(r.n);
+          return terms.every(term => name.includes(term));
+        });
+      }
       if (pf) filtered = filtered.filter(r => r.p === pf);
       if (tf) {
         filtered = filtered.filter(r => {
