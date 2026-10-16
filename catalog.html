@@ -86,20 +86,56 @@ body.modal-open{overflow:hidden}
 <script src="catalog.data"></script>
 <script>
 'use strict';
-async function loadCatalogData(){
-  const encoded=window.CATALOG_DATA_GZIP_B64;
-  if(!encoded)throw new Error('Database compresso non trovato. Verifica che catalog.data sia accanto a catalog.html.');
-  if(typeof DecompressionStream==='undefined')throw new Error('Il browser non supporta la decompressione gzip nativa. Usa una versione recente di Chrome, Edge, Firefox o Safari.');
-  const binary=atob(encoded);
-  const bytes=new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  const text=await new Response(stream).text();
-  return JSON.parse(text);
+async function streamCatalogData(onChunkReceived) {
+  const encoded = window.CATALOG_DATA_GZIP_B64;
+  if (!encoded) throw new Error('Database non trovato. Verifica che catalog.data sia accanto a catalog.html.');
+  if (typeof DecompressionStream === 'undefined') throw new Error('Browser non compatibile con DecompressionStream.');
+
+  const res = await fetch(`data:application/octet-stream;base64,${encoded}`);
+  const decompressedStream = res.body
+    .pipeThrough(new DecompressionStream('gzip'))
+    .pipeThrough(new TextDecoderStream());
+
+  const reader = decompressedStream.getReader();
+  let buffer = '';
+  const batchSize = 60;
+  let batch = [];
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += value;
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const item = JSON.parse(line);
+      item.search = (item.title + ' ' + (item.originalTitle || '') + ' ' + (item.director || '') + ' ' + (item.year || '')).toLowerCase();
+      batch.push(item);
+
+      if (batch.length >= batchSize) {
+        onChunkReceived(batch);
+        batch = [];
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    const item = JSON.parse(buffer);
+    item.search = (item.title + ' ' + (item.originalTitle || '') + ' ' + (item.director || '') + ' ' + (item.year || '')).toLowerCase();
+    batch.push(item);
+  }
+
+  if (batch.length > 0) {
+    onChunkReceived(batch);
+  }
 }
 (async()=>{
 try{
-const DATA=await loadCatalogData();
+let DATA = [];
 const state={query:'',year:'',directory:'',runtime:'',tags:[],sort:'date_desc',favoritesOnly:false,dupsOnly:false,rendered:0,batch:60,filtered:[]};
 const $=id=>document.getElementById(id);
 const grid=$('grid'),loader=$('loader'),empty=$('empty'),search=$('search');
@@ -125,7 +161,12 @@ async function copyText(text){
 }
 function uniqueValues(key){if(key==='directory'){const out=new Set();DATA.forEach(i=>itemDirs(i).forEach(d=>out.add(d)));return [...out].sort((a,b)=>String(a).localeCompare(String(b),'it',{numeric:true}))}const out=new Set();DATA.forEach(i=>{const v=i[key];Array.isArray(v)?v.forEach(x=>x&&out.add(x)):v&&out.add(v)});return [...out].sort((a,b)=>String(a).localeCompare(String(b),'it',{numeric:true}))}
 function fillSelect(id,values,descending=false){const el=$(id);const current=el.value;values.sort((a,b)=>descending?Number(b)-Number(a):String(a).localeCompare(String(b),'it',{numeric:true})).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)});el.value=current}
-fillSelect('yearFilter',uniqueValues('year').filter(Boolean),true);fillSelect('directoryFilter',uniqueValues('directory'));
+function refreshFilterSelects() {
+  $('yearFilter').innerHTML = '<option value="">Tutti</option>';
+  $('directoryFilter').innerHTML = '<option value="">Tutte</option>';
+  fillSelect('yearFilter', uniqueValues('year').filter(Boolean), true);
+  fillSelect('directoryFilter', uniqueValues('directory'));
+}
 function updateFilterBadge(){const count=['year','directory','runtime'].filter(k=>String(state[k]).trim()).length+state.tags.length;$('activeFilters').textContent=count}
 function parseSearchQuery(value){
   const positive=[];
@@ -164,7 +205,23 @@ $('resetFilters').addEventListener('click',resetAllFilters);
 grid.addEventListener('click',e=>{const fav=e.target.closest('[data-fav]');if(fav){e.stopPropagation();toggleFavorite(fav.dataset.fav,fav);return}const card=e.target.closest('.card');if(card)openModal(card.dataset.id)});grid.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('card')){e.preventDefault();openModal(e.target.dataset.id)}});
 $('modalClose').addEventListener('click',closeModal);$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});document.addEventListener('keydown',e=>{if((e.key==='ArrowRight'||e.key==='ArrowLeft')&&document.body.classList.contains('modal-open')){e.preventDefault();navModal(e.key==='ArrowRight'?1:-1);return}if(e.key==='Escape'){if(document.body.classList.contains('modal-open'))closeModal();else{resetAllFilters();search.focus()}}if(e.key==='/'&&!document.body.classList.contains('modal-open')){e.preventDefault();search.focus()}});
 window.addEventListener('scroll',()=>{if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-700)renderNext()},{passive:true});
-filterData();
+streamCatalogData((chunk) => {
+  const isFirstChunk = (DATA.length === 0);
+  DATA.push(...chunk);
+
+  if (isFirstChunk) {
+    refreshFilterSelects();
+    filterData();
+  } else if (!state.query && state.sort === 'date_desc' && !state.favoritesOnly && !state.dupsOnly && !state.year && !state.directory && !state.runtime && !state.tags.length) {
+    state.filtered = DATA;
+    $('resultsCount').textContent = `${DATA.length} titoli`;
+    renderNext();
+  }
+}).then(() => {
+  refreshFilterSelects();
+  filterData();
+  loader.textContent = state.filtered.length ? 'Fine catalogo' : '';
+});
 }catch(error){
   console.error(error);
   const loader=document.getElementById('loader');
