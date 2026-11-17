@@ -200,7 +200,7 @@
 <body>
   <header>
     <div class="topline">
-      <div class="title">mlmongo.py index [<a href="/catalog.html">catalog</a>]</div>
+      <div class="title">mlmongo.py index [<a href="catalog.html">catalog</a>]</div>
       <div class="counter" id="counter">—</div>
     </div>
     <div class="controls">
@@ -249,9 +249,11 @@
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
-    // Search words independently, treating punctuation/separators as spaces.
+    // Search words independently, treating punctuation/separators as spaces, stripping accents.
     function normalizeSearchText(value) {
       return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLocaleLowerCase('it-IT')
         .replace(/[^\p{L}\p{N}]+/gu, ' ')
         .trim();
@@ -266,7 +268,13 @@
       const terms = searchTerms(query).sort((a, b) => b.length - a.length);
       if (!terms.length) return esc(source);
 
-      const safeTerms = terms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const safeTerms = terms.map(term => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return escaped.replace(/[aeiouc]/gi, ch => ({
+          'a': '[aàáâäãå]', 'e': '[eèéêë]', 'i': '[iìíîï]',
+          'o': '[oòóôöõ]', 'u': '[uùúûü]', 'c': '[cç]'
+        }[ch.toLowerCase()] || ch));
+      });
       const matches = new RegExp('(' + safeTerms.join('|') + ')', 'giu');
       let html = '';
       let lastIndex = 0;
@@ -446,12 +454,20 @@
         tagFilter.disabled = false;
 
         const get = () => ({ q: search.value, p: pathFilter.value, tg: tagFilter.value });
-        search.addEventListener('input', () => { const v = get(); render(v.q, v.p, v.tg); });
-        pathFilter.addEventListener('change', () => { const v = get(); render(v.q, v.p, v.tg); });
-        tagFilter.addEventListener('change', () => { const v = get(); render(v.q, v.p, v.tg); });
+        let debounceTimer = null;
+        search.addEventListener('input', () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const v = get();
+            render(v.q, v.p, v.tg);
+          }, 150);
+        });
+        pathFilter.addEventListener('change', () => { clearTimeout(debounceTimer); const v = get(); render(v.q, v.p, v.tg); });
+        tagFilter.addEventListener('change', () => { clearTimeout(debounceTimer); const v = get(); render(v.q, v.p, v.tg); });
 
         document.addEventListener('keydown', (e) => {
           if (e.key !== 'Escape') return;
+          clearTimeout(debounceTimer);
           search.value = '';
           pathFilter.value = '';
           tagFilter.value = '';
